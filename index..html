@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Mini TikTok</title>
+<style>
+  * {
+    box-sizing: border-box;
+  }
+  body, html {
+    margin:0; padding:0;
+    height: 100%;
+    background: #000;
+    color: #fff;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    overflow-y: scroll;
+    scroll-behavior: smooth;
+  }
+  .videos-wrapper {
+    height: 100vh;
+    scroll-snap-type: y mandatory;
+    overflow-y: scroll;
+  }
+  .video-container {
+    position: relative;
+    height: 100vh;
+    scroll-snap-align: start;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    padding: 20px;
+    overflow: hidden;
+  }
+  video {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 1;
+  }
+  .info-panel {
+    position: relative;
+    z-index: 2;
+    max-width: 400px;
+  }
+  .user {
+    font-weight: bold;
+    margin-bottom: 8px;
+  }
+  .description {
+    font-size: 14px;
+    margin-bottom: 12px;
+  }
+  .actions {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    right: 20px;
+    bottom: 120px;
+    gap: 30px;
+    z-index: 10;
+  }
+  .action-button {
+    cursor: pointer;
+    user-select: none;
+    font-size: 28px;
+    transition: transform 0.2s ease;
+    text-align: center;
+  }
+  .action-button:active {
+    transform: scale(1.2);
+  }
+  .like-count, .comment-count, .share-count {
+    font-size: 14px;
+    text-align: center;
+    margin-top: 4px;
+  }
+  .liked {
+    color: #ff0050;
+  }
+  .comments-section {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    max-height: 180px;
+    background: rgba(0,0,0,0.7);
+    overflow-y: auto;
+    padding: 10px 20px;
+    box-sizing: border-box;
+    font-size: 13px;
+    display: none;
+  }
+  .comments-section.active {
+    display: block;
+  }
+  .comment {
+    margin-bottom: 8px;
+  }
+  .comment strong {
+    color: #ff0050;
+  }
+</style>
+</head>
+<body>
+
+<div class="videos-wrapper">
+
+  <div class="video-container" data-index="0">
+    <video src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.webm" autoplay muted loop></video>
+    <div class="info-panel">
+      <div class="user">@joaomarcel</div>
+      <div class="description">Esse vídeo é lindo demais! #natureza #flores</div>
+    </div>
+  </div>
+
+  <div class="video-container" data-index="1">
+    <video src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/bee.webm" autoplay muted loop></video>
+    <div class="info-panel">
+      <div class="user">@joaomarcel</div>
+      <div class="description">Olha essa abelha trabalhando! #natureza #abelha</div>
+    </div>
+  </div>
+
+  <div class="video-container" data-index="2">
+    <video src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.webm" autoplay muted loop></video>
+    <div class="info-panel">
+      <div class="user">@joaomarcel</div>
+      <div class="description">Flores no campo #paz #vida</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="actions">
+  <div class="action-button like" id="likeBtn" title="Curtir">❤️
+    <div class="like-count" id="likeCount">0</div>
+  </div>
+  <div class="action-button comment" id="commentBtn" title="Comentários">💬
+    <div class="comment-count" id="commentCount">0</div>
+  </div>
+  <div class="action-button share" id="shareBtn" title="Compartilhar">🔗
+    <div class="share-count" id="shareCount">0</div>
+  </div>
+</div>
+
+<div class="comments-section" id="commentsSection">
+  <!-- Comentários vão aparecer aqui -->
+</div>
+
+<script>
+  const likeBtn = document.getElementById('likeBtn');
+  const commentBtn = document.getElementById('commentBtn');
+  const shareBtn = document.getElementById('shareBtn');
+  const likeCountEl = document.getElementById('likeCount');
+  const commentCountEl = document.getElementById('commentCount');
+  const shareCountEl = document.getElementById('shareCount');
+  const commentsSection = document.getElementById('commentsSection');
+
+  let likeCount = 0;
+  let commentCount = 3;
+  let shareCount = 0;
+
+  const comments = [
+    {user: 'ana', text: 'Muito legal!'},
+    {user: 'pedro', text: 'Adorei o vídeo.'},
+    {user: 'maria', text: 'Quero mais!'}
+  ];
+
+  function updateCounts() {
+    likeCountEl.textContent = likeCount;
+    commentCountEl.textContent = commentCount;
+    shareCountEl.textContent = shareCount;
+  }
+
+  function toggleLike() {
+    if(likeBtn.classList.contains('liked')){
+      likeBtn.classList.remove('liked');
+      likeCount--;
+    } else {
+      likeBtn.classList.add('liked');
+      likeCount++;
+    }
+    updateCounts();
+  }
+
+  function toggleComments() {
+    if(commentsSection.classList.contains('active')){
+      commentsSection.classList.remove('active');
+    } else {
+      renderComments();
+      commentsSection.classList.add('active');
+      commentsSection.scrollTop = commentsSection.scrollHeight;
+    }
+  }
+
+  function renderComments() {
+    commentsSection.innerHTML = '';
+    comments.forEach(c => {
+      const div = document.createElement('div');
+      div.className = 'comment';
+      div.innerHTML = `<strong>@${c.user}:</strong> ${c.text}`;
+      commentsSection.appendChild(div);
+    });
+  }
+
+  function share() {
+    shareCount++;
+    updateCounts();
+    alert('Link copiado! (Simulação)');
+  }
+
+  likeBtn.addEventListener('click', toggleLike);
+  commentBtn.addEventListener('click', toggleComments);
+  shareBtn.addEventListener('click', share);
+
+  updateCounts();
+</script>
+
+</body>
+</html>
+
